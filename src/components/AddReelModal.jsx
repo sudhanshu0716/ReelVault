@@ -13,14 +13,6 @@ export default function AddReelModal({ isOpen, onClose, onReelAdded }) {
   const [jobComplete, setJobComplete] = useState(false);
   const [newlyCreatedReel, setNewlyCreatedReel] = useState(null);
   const [processingError, setProcessingError] = useState('');
-  
-  // Local testing inputs to avoid dummy templates
-  const [useCustomMetadata, setUseCustomMetadata] = useState(false);
-  const [customTitle, setCustomTitle] = useState('');
-  const [customCategory, setCustomCategory] = useState('Lifestyle');
-  const [customSummary, setCustomSummary] = useState('');
-  const [customTranscript, setCustomTranscript] = useState('');
-  
   const [processingMode, setProcessingMode] = useState('simulation');
   const [gitToken, setGitToken] = useState('');
   const [gitRepo, setGitRepo] = useState('');
@@ -93,19 +85,9 @@ export default function AddReelModal({ isOpen, onClose, onReelAdded }) {
         },
         async (reelData) => {
           try {
-            // Apply custom metadata overrides if configured by user
-            const finalizedData = useCustomMetadata ? {
-              ...reelData,
-              title: customTitle.trim() || 'Custom Tested Instagram Reel',
-              category: customCategory,
-              summary: customSummary.trim() || 'A beautiful custom summarized review created locally.',
-              transcript: customTranscript.trim() || 'This transcript is custom authored by the local developer.',
-              notes: 'Custom notes from local verification run.'
-            } : reelData;
-
             // Write to local DB
-            const id = await db.reels.add(finalizedData);
-            const savedReel = { ...finalizedData, id };
+            const id = await db.reels.add(reelData);
+            const savedReel = { ...reelData, id };
             
             setNewlyCreatedReel(savedReel);
             setJobComplete(true);
@@ -124,7 +106,8 @@ export default function AddReelModal({ isOpen, onClose, onReelAdded }) {
             setConsoleLogs(prev => [...prev, { text: `[Error] Failed to save database record: ${err.message}`, type: 'error' }]);
             setIsProcessing(false);
           }
-        }
+        },
+        null
       );
     } else {
       // 2. Live GitHub Dispatch Action Execution
@@ -203,11 +186,6 @@ export default function AddReelModal({ isOpen, onClose, onReelAdded }) {
     setJobComplete(false);
     setNewlyCreatedReel(null);
     setProcessingError('');
-    setUseCustomMetadata(false);
-    setCustomTitle('');
-    setCustomCategory('Lifestyle');
-    setCustomSummary('');
-    setCustomTranscript('');
     onClose();
   };
 
@@ -314,82 +292,6 @@ export default function AddReelModal({ isOpen, onClose, onReelAdded }) {
                   <p className="text-[10px] text-slate-500">Paste the URL shared from Instagram to trigger the background AI pipeline.</p>
                 </div>
 
-                {/* Local Custom Metadata Input Toggles */}
-                {processingMode !== 'github' && (
-                  <div className="bg-slate-950/40 border border-white/5 rounded-xl p-4 space-y-3.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-white flex items-center gap-1 select-none">
-                        <Sparkles className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />
-                        ✍ Write Custom Verification Details
-                      </label>
-                      <input
-                        type="checkbox"
-                        checked={useCustomMetadata}
-                        onChange={(e) => setUseCustomMetadata(e.target.checked)}
-                        className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-white/10 bg-slate-950/60 cursor-pointer"
-                      />
-                    </div>
-                    <p className="text-[10px] text-slate-400 leading-normal">
-                      {useCustomMetadata 
-                        ? 'Type details below. The pipeline simulation will run and output your exact details!'
-                        : 'Enable this checkbox to type your own title, category, summary and verify they load exactly.'}
-                    </p>
-                    
-                    {useCustomMetadata && (
-                      <div className="space-y-3 pt-2 border-t border-white/5 animate-fade-in">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-semibold text-slate-300">Custom Title</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="e.g. My Custom Sourced Steak Recipe"
-                            value={customTitle}
-                            onChange={(e) => setCustomTitle(e.target.value)}
-                            className="w-full bg-slate-950/80 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:border-purple-500/80 transition-colors"
-                          />
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-semibold text-slate-300">Custom Category</label>
-                          <select
-                            value={customCategory}
-                            onChange={(e) => setCustomCategory(e.target.value)}
-                            className="w-full bg-slate-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200 focus:border-purple-500/80 transition-colors cursor-pointer"
-                          >
-                            <option value="Food">Food</option>
-                            <option value="Travel">Travel</option>
-                            <option value="Tech">Tech</option>
-                            <option value="Comedy">Comedy</option>
-                            <option value="Music">Music</option>
-                            <option value="Lifestyle">Lifestyle</option>
-                          </select>
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-semibold text-slate-300">Custom Summary Takeaways</label>
-                          <textarea
-                            placeholder="Type bulleted key takeaways or summary..."
-                            required
-                            value={customSummary}
-                            onChange={(e) => setCustomSummary(e.target.value)}
-                            className="w-full h-16 bg-slate-950/80 border border-white/10 rounded-lg p-2 text-xs text-slate-200 focus:border-purple-500/80 transition-colors resize-none"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-semibold text-slate-300">Custom Speech Transcript</label>
-                          <textarea
-                            placeholder="Type or paste the verbal speech log..."
-                            required
-                            value={customTranscript}
-                            onChange={(e) => setCustomTranscript(e.target.value)}
-                            className="w-full h-16 bg-slate-950/80 border border-white/10 rounded-lg p-2 text-xs text-slate-200 focus:border-purple-500/80 transition-colors resize-none"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* Mode indicator banner */}
                 <div className="bg-slate-950/40 border border-white/5 rounded-xl p-4 flex items-center justify-between">
