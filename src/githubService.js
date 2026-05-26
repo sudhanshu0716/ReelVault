@@ -125,24 +125,13 @@ export function startPipelineSimulation(reelUrl, onLog, onComplete) {
   }
 
   const logs = [
-    { text: '⚡ Initializing GitHub Actions runner environment...', type: 'info', delay: 200 },
-    { text: '✔ Runner online. OS: Ubuntu-22.04 LTS. Arch: x86_64.', type: 'success', delay: 600 },
-    { text: '⚙ Fetching workflow dispatch action parameters...', type: 'info', delay: 1000 },
-    { text: `🔗 Shared Reel URL received: ${reelUrl}`, type: 'success', delay: 1400 },
-    { text: '📥 [yt-dlp] Downloading video streams from Instagram servers...', type: 'info', delay: 1800 },
-    { text: '📥 [yt-dlp] Video stream downloaded: 1080p MP4 H264 (8.2 MB)', type: 'success', delay: 2800 },
-    { text: '📥 [yt-dlp] Audio stream downloaded: AAC Stereo (780 KB)', type: 'success', delay: 3200 },
-    { text: '🎬 [VideoPrism] Initializing Google VideoPrism frame analyzer...', type: 'info', delay: 3700 },
-    { text: '🎬 [VideoPrism] Extracted keyframes at 1fps. Generating frame embeddings...', type: 'info', delay: 4200 },
-    { text: `🎬 [VideoPrism] Frame classification complete. Dominant Topic: ${category}`, type: 'success', delay: 5000 },
-    { text: '🎙 [Whisper] Loading open-source Whisper speech-to-text engine...', type: 'info', delay: 5500 },
-    { text: '🎙 [Whisper] Transcribing audio stream waveforms into English text...', type: 'info', delay: 6000 },
-    { text: '🎙 [Whisper] Audio transcription complete. Confidence score: 98.4%', type: 'success', delay: 7200 },
-    { text: '🧠 [Groq LLaMA-3] Synthesizing transcript & caption metadata...', type: 'info', delay: 7800 },
-    { text: '🧠 [Groq LLaMA-3] Creating structured summary, title, and categorization...', type: 'info', delay: 8400 },
-    { text: '💾 [Database] Establishing sync connection to central Supabase DB...', type: 'info', delay: 9200 },
-    { text: '💾 [Database] Successfully registered metadata in central schema.', type: 'success', delay: 9800 },
-    { text: '🎉 [Pipeline] Ingestion workflow successfully completed! Run ID: #run_' + Math.floor(Math.random() * 900000 + 100000), type: 'success', delay: 10400 }
+    { text: '🔧 Initializing Local IndexedDB Sandbox...', type: 'info', delay: 200 },
+    { text: '✔ Local DB connection established. Accessing "reels" schema.', type: 'success', delay: 500 },
+    { text: `📝 Registering test URL: ${reelUrl}`, type: 'info', delay: 900 },
+    { text: '🤖 Local keyword parser analyzing URL string structures...', type: 'info', delay: 1400 },
+    { text: `✔ Keyword search complete. Fallback Category classified: ${category}`, type: 'success', delay: 1800 },
+    { text: '💾 Saving structured cache record to local library cache...', type: 'info', delay: 2300 },
+    { text: '🎉 Sandbox seeder complete! Reel successfully registered locally.', type: 'success', delay: 2700 }
   ];
 
   let currentLogIdx = 0;

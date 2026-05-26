@@ -21,6 +21,21 @@ export default function AddReelModal({ isOpen, onClose, onReelAdded }) {
   const [customSummary, setCustomSummary] = useState('');
   const [customTranscript, setCustomTranscript] = useState('');
   
+  const [processingMode, setProcessingMode] = useState('simulation');
+  const [gitToken, setGitToken] = useState('');
+  const [gitRepo, setGitRepo] = useState('');
+  const [gitOwner, setGitOwner] = useState('');
+
+  // Reload configurations on modal open
+  useEffect(() => {
+    if (isOpen) {
+      setProcessingMode(localStorage.getItem('rv_processing_mode') || 'simulation');
+      setGitToken(localStorage.getItem('rv_github_token') || '');
+      setGitRepo(localStorage.getItem('rv_github_repo') || '');
+      setGitOwner(localStorage.getItem('rv_github_owner') || '');
+    }
+  }, [isOpen]);
+
   const terminalEndRef = useRef(null);
   const simulationRef = useRef(null);
 
@@ -232,132 +247,168 @@ export default function AddReelModal({ isOpen, onClose, onReelAdded }) {
 
           {/* Input field */}
           {!isProcessing && !jobComplete && (
-            <form onSubmit={handleStartPipeline} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-300">Reel Share URL</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="url"
-                      required
-                      placeholder="e.g. https://www.instagram.com/reel/..."
-                      value={reelUrl}
-                      onChange={(e) => setReelUrl(e.target.value)}
-                      className="w-full bg-slate-950/60 border border-white/10 focus:border-purple-500/80 focus:glow-purple rounded-xl pl-3 pr-10 py-3 text-sm text-slate-200 placeholder:text-slate-600 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={handlePaste}
-                      title="Paste from Clipboard"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-400 p-1.5 rounded-lg hover:bg-white/5 transition-all"
-                    >
-                      <Clipboard className="h-4 w-4" />
-                    </button>
-                  </div>
+            processingMode === 'github' && (!gitToken || !gitRepo || !gitOwner) ? (
+              <div className="text-center space-y-4 py-4 animate-scale-up">
+                <div className="h-12 w-12 rounded-full bg-rose-500/10 border border-rose-500/25 flex items-center justify-center mx-auto text-rose-400">
+                  <TerminalIcon className="h-5 w-5" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-white">GitHub Action Credentials Required</h4>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                    You have selected "Live GitHub Actions" mode, but your settings are incomplete. ReelVault needs your Personal Access Token (PAT), Owner, and Repo parameters to trigger cloud pipelines.
+                  </p>
+                </div>
+                <div className="pt-2 flex flex-col gap-2">
                   <button
-                    type="submit"
-                    className="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 rounded-xl flex items-center justify-center transition-all shadow-lg hover:shadow-purple-500/20 active:translate-y-px"
+                    type="button"
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('changeTab', { detail: 'settings' }));
+                      onClose();
+                    }}
+                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-all active:translate-y-px shadow-lg hover:shadow-purple-500/10"
                   >
-                    <Send className="h-4 w-4" />
+                    Configure Keys in Settings
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      localStorage.setItem('rv_processing_mode', 'simulation');
+                      setProcessingMode('simulation');
+                    }}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold py-2.5 px-4 rounded-xl text-xs transition-all border border-white/5"
+                  >
+                    Switch to Local Simulator (Try offline)
                   </button>
                 </div>
-                 <p className="text-[10px] text-slate-500">Paste the URL shared from Instagram to trigger the background AI pipeline.</p>
               </div>
-
-              {/* Local Custom Metadata Input Toggles */}
-              {localStorage.getItem('rv_processing_mode') !== 'github' && (
-                <div className="bg-slate-950/40 border border-white/5 rounded-xl p-4 space-y-3.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-white flex items-center gap-1 select-none">
-                      <Sparkles className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />
-                      ✍ Write Custom Verification Details
-                    </label>
-                    <input
-                      type="checkbox"
-                      checked={useCustomMetadata}
-                      onChange={(e) => setUseCustomMetadata(e.target.checked)}
-                      className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-white/10 bg-slate-950/60 cursor-pointer"
-                    />
-                  </div>
-                  <p className="text-[10px] text-slate-400 leading-normal">
-                    {useCustomMetadata 
-                      ? 'Type details below. The pipeline simulation will run and output your exact details!'
-                      : 'Enable this checkbox to type your own title, category, summary and verify they load exactly.'}
-                  </p>
-                  
-                  {useCustomMetadata && (
-                    <div className="space-y-3 pt-2 border-t border-white/5 animate-fade-in">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-semibold text-slate-300">Custom Title</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. My Custom Sourced Steak Recipe"
-                          value={customTitle}
-                          onChange={(e) => setCustomTitle(e.target.value)}
-                          className="w-full bg-slate-950/80 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:border-purple-500/80 transition-colors"
-                        />
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-semibold text-slate-300">Custom Category</label>
-                        <select
-                          value={customCategory}
-                          onChange={(e) => setCustomCategory(e.target.value)}
-                          className="w-full bg-slate-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200 focus:border-purple-500/80 transition-colors cursor-pointer"
-                        >
-                          <option value="Food">Food</option>
-                          <option value="Travel">Travel</option>
-                          <option value="Tech">Tech</option>
-                          <option value="Comedy">Comedy</option>
-                          <option value="Music">Music</option>
-                          <option value="Lifestyle">Lifestyle</option>
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-semibold text-slate-300">Custom Summary Takeaways</label>
-                        <textarea
-                          placeholder="Type bulleted key takeaways or summary..."
-                          required
-                          value={customSummary}
-                          onChange={(e) => setCustomSummary(e.target.value)}
-                          className="w-full h-16 bg-slate-950/80 border border-white/10 rounded-lg p-2 text-xs text-slate-200 focus:border-purple-500/80 transition-colors resize-none"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-semibold text-slate-300">Custom Speech Transcript</label>
-                        <textarea
-                          placeholder="Type or paste the verbal speech log..."
-                          required
-                          value={customTranscript}
-                          onChange={(e) => setCustomTranscript(e.target.value)}
-                          className="w-full h-16 bg-slate-950/80 border border-white/10 rounded-lg p-2 text-xs text-slate-200 focus:border-purple-500/80 transition-colors resize-none"
-                        />
-                      </div>
+            ) : (
+              <form onSubmit={handleStartPipeline} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-300">Reel Share URL</label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="url"
+                        required
+                        placeholder="e.g. https://www.instagram.com/reel/..."
+                        value={reelUrl}
+                        onChange={(e) => setReelUrl(e.target.value)}
+                        className="w-full bg-slate-950/60 border border-white/10 focus:border-purple-500/80 focus:glow-purple rounded-xl pl-3 pr-10 py-3 text-sm text-slate-200 placeholder:text-slate-600 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={handlePaste}
+                        title="Paste from Clipboard"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-purple-400 p-1.5 rounded-lg hover:bg-white/5 transition-all"
+                      >
+                        <Clipboard className="h-4 w-4" />
+                      </button>
                     </div>
-                  )}
+                    <button
+                      type="submit"
+                      className="bg-purple-600 hover:bg-purple-500 text-white font-semibold px-4 rounded-xl flex items-center justify-center transition-all shadow-lg hover:shadow-purple-500/20 active:translate-y-px"
+                    >
+                      <Send className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-500">Paste the URL shared from Instagram to trigger the background AI pipeline.</p>
                 </div>
-              )}
 
-              {/* Mode indicator banner */}
-              <div className="bg-slate-950/40 border border-white/5 rounded-xl p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-purple-600/10 border border-purple-500/20 flex items-center justify-center shrink-0">
-                    <TerminalIcon className="h-4 w-4 text-purple-400" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-white">
-                      Mode: {localStorage.getItem('rv_processing_mode') === 'github' ? 'GitHub Actions Pipeline' : 'Pipeline Simulation'}
-                    </h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
-                      {localStorage.getItem('rv_processing_mode') === 'github' ? 'Launches live GitHub Action workflow' : 'Fires local mock ingest pipeline'}
+                {/* Local Custom Metadata Input Toggles */}
+                {processingMode !== 'github' && (
+                  <div className="bg-slate-950/40 border border-white/5 rounded-xl p-4 space-y-3.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-white flex items-center gap-1 select-none">
+                        <Sparkles className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />
+                        ✍ Write Custom Verification Details
+                      </label>
+                      <input
+                        type="checkbox"
+                        checked={useCustomMetadata}
+                        onChange={(e) => setUseCustomMetadata(e.target.checked)}
+                        className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-white/10 bg-slate-950/60 cursor-pointer"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-normal">
+                      {useCustomMetadata 
+                        ? 'Type details below. The pipeline simulation will run and output your exact details!'
+                        : 'Enable this checkbox to type your own title, category, summary and verify they load exactly.'}
                     </p>
+                    
+                    {useCustomMetadata && (
+                      <div className="space-y-3 pt-2 border-t border-white/5 animate-fade-in">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold text-slate-300">Custom Title</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. My Custom Sourced Steak Recipe"
+                            value={customTitle}
+                            onChange={(e) => setCustomTitle(e.target.value)}
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:border-purple-500/80 transition-colors"
+                          />
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold text-slate-300">Custom Category</label>
+                          <select
+                            value={customCategory}
+                            onChange={(e) => setCustomCategory(e.target.value)}
+                            className="w-full bg-slate-950/80 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200 focus:border-purple-500/80 transition-colors cursor-pointer"
+                          >
+                            <option value="Food">Food</option>
+                            <option value="Travel">Travel</option>
+                            <option value="Tech">Tech</option>
+                            <option value="Comedy">Comedy</option>
+                            <option value="Music">Music</option>
+                            <option value="Lifestyle">Lifestyle</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold text-slate-300">Custom Summary Takeaways</label>
+                          <textarea
+                            placeholder="Type bulleted key takeaways or summary..."
+                            required
+                            value={customSummary}
+                            onChange={(e) => setCustomSummary(e.target.value)}
+                            className="w-full h-16 bg-slate-950/80 border border-white/10 rounded-lg p-2 text-xs text-slate-200 focus:border-purple-500/80 transition-colors resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold text-slate-300">Custom Speech Transcript</label>
+                          <textarea
+                            placeholder="Type or paste the verbal speech log..."
+                            required
+                            value={customTranscript}
+                            onChange={(e) => setCustomTranscript(e.target.value)}
+                            className="w-full h-16 bg-slate-950/80 border border-white/10 rounded-lg p-2 text-xs text-slate-200 focus:border-purple-500/80 transition-colors resize-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Mode indicator banner */}
+                <div className="bg-slate-950/40 border border-white/5 rounded-xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-purple-600/10 border border-purple-500/20 flex items-center justify-center shrink-0">
+                      <TerminalIcon className="h-4 w-4 text-purple-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">
+                        Mode: {processingMode === 'github' ? 'GitHub Actions Pipeline' : 'Pipeline Simulation'}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        {processingMode === 'github' ? 'Launches live GitHub Action workflow' : 'Fires local mock ingest pipeline'}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </form>
+              </form>
+            )
           )}
 
           {/* Active Terminal Logs Screen */}
