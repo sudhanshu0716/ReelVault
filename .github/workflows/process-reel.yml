@@ -1,0 +1,54 @@
+name: Process Shared Reel Pipeline
+
+on:
+  repository_dispatch:
+    types: [process-reel]
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install yt-dlp
+        run: |
+          sudo wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp
+          sudo chmod a+rx /usr/local/bin/yt-dlp
+          yt-dlp --version
+
+      - name: Install Script Dependencies
+        run: |
+          npm install
+
+      - name: Execute Reel AI Processing Pipeline
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          REEL_URL: ${{ github.event.client_payload.url }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          node scripts/process-reel.js
+
+      - name: Commit & Push Local Database Changes (Fallback Sync)
+        if: env.SUPABASE_URL == ''
+        run: |
+          git config --global user.name "ReelVault Actions Bot"
+          git config --global user.email "actions@reelvault.app"
+          git add public/data/ || true
+          git commit -m "chore: auto-sync ingested reel database [skip ci]" || true
+          git push
