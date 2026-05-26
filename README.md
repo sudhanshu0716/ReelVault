@@ -3,11 +3,11 @@
 > Declutter, transcribe, and search your Instagram Reels library using an automated, cloud-based AI ingestion pipeline.
 
 ```text
-    ____                 ______               _ __
-   / __ \___  ___  / /  / ____/____ ___  __  / / /_
-  / /_/ / _ \/ _ \/ /  / /_   / __ `/ / / / / / __/
- / _, _/  __/  __/ /  / __/  / /_/ / /_/ / / / /_
-/_/ |_|\___/\___/_/  /_/     \__,_/\__,_/_/_/\__/
+    ____                 _    __             _ __
+   / __ \___  ___  / /  | |  / /____ ___  __/ / /_
+  / /_/ / _ \/ _ \/ /   | | / / __ `/ / / / / __/
+ / _, _/  __/  __/ /    | |/ / /_/ / /_/ / / /_
+/_/ |_|\___/\___/_/     |___/\__,_/\__,_/_/\__/
 ```
 
 ReelVault is a highly aesthetic, **local-first** web application (ready for packaging as an Android APK via Capacitor) that organizes your shared Instagram Reels. It offloads heavy video downloads (`yt-dlp`), classifications (`Google VideoPrism`), and speech-to-text summaries (`Groq Whisper + LLaMA-3`) into a private **GitHub Actions workflow**, updating your local IndexedDB library dynamically.
