@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../db';
 import { fetchWorkflowRuns } from '../githubService';
 import { 
-  Search, Grid, List, Heart, ExternalLink, Calendar, Filter, Eye, AlertCircle, RefreshCw, Layers
+  Search, Grid, List, Heart, ExternalLink, Calendar, Filter, Eye, AlertCircle, RefreshCw, Layers, Info
 } from 'lucide-react';
 
 export default function Dashboard({ onSelectReel, triggerRefresh }) {
@@ -135,8 +135,35 @@ export default function Dashboard({ onSelectReel, triggerRefresh }) {
             <RefreshCw className={`h-5 w-5 ${stats.processing > 0 ? 'animate-spin' : ''}`} />
           </div>
         </div>
-
       </div>
+
+      {/* Simulation Mode Notice Banner */}
+      {localStorage.getItem('rv_processing_mode') !== 'github' && (
+        <div className="glass-panel p-4 border-purple-500/20 bg-purple-950/10 flex flex-col sm:flex-row items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-purple-500/25 border border-purple-500/35 flex items-center justify-center text-purple-400 shrink-0 animate-pulse">
+              <Info className="h-4.5 w-4.5" />
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                ⚡ Local Ingestion Simulator Active
+              </p>
+              <p className="text-[10px] text-slate-400 mt-0.5 max-w-xl leading-normal">
+                ReelVault is operating in offline-first Simulation Mode. Paste any Reel link to simulate the pipeline and test custom cards. To trigger actual cloud downloads and VideoPrism/LLaMA AI processing, configure your private connection in the Settings tab.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('changeTab', { detail: 'settings' }));
+            }}
+            className="text-[10px] bg-purple-600 hover:bg-purple-500 text-white font-semibold px-3 py-1.5 rounded-xl transition-all shrink-0 active:translate-y-px"
+          >
+            Configure GitHub Action
+          </button>
+        </div>
+      )}
 
       {/* GitHub Workflow Job Alert list if active */}
       {activeJobs.length > 0 && (

@@ -68,6 +68,12 @@ export default function App() {
     };
 
     initializeApp();
+
+    const handleTabChangeEvent = (e) => {
+      if (e.detail) setActiveTab(e.detail);
+    };
+    window.addEventListener('changeTab', handleTabChangeEvent);
+    return () => window.removeEventListener('changeTab', handleTabChangeEvent);
   }, []);
 
   const triggerDashboardRefresh = () => {
