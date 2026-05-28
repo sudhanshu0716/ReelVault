@@ -1,4 +1,4 @@
-# 🪐 ReelVault
+#  ReelVault
 
 > Declutter, transcribe, and search your Instagram Reels library using an automated, cloud-based AI ingestion pipeline.
 
